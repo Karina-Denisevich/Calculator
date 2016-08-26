@@ -14,7 +14,6 @@ public class InputFilter implements Filter {
     }
 
     private String deleteDelimiters(String expression) {
-
         return expression.replaceAll(" ", "");
     }
 
@@ -23,7 +22,6 @@ public class InputFilter implements Filter {
         Matcher matcher = pattern.matcher(expression);
 
         while (matcher.find()) {
-
             expression.insert(expression.indexOf(matcher.group()) + 1, '*');
         }
 

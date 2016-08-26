@@ -1,6 +1,6 @@
 package com.epam.calculator.mathematics;
 
-interface Mathematics {
+public interface Mathematics {
 
-    double compute(double a, double b);
+    Double compute(double a, double b);
 }
