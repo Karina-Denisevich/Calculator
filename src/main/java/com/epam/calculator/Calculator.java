@@ -37,6 +37,29 @@ public class Calculator {
     }
 
     private StringBuffer openBrackets(StringBuffer expression) {
+
+        if (expression.length() != 0) {
+            Pattern pattern = Pattern.compile("\\(([^\\(\\)])+\\)");
+            Matcher matcher = pattern.matcher(expression);
+
+            while (matcher.find()) {
+                StringBuffer simpleExpression = new StringBuffer(matcher.group().substring(1, matcher.group().length() - 1));
+
+                int startIndex = expression.indexOf(matcher.group());
+                int endIndex = startIndex + matcher.group().length();
+                expression.replace(startIndex, endIndex, calculateSimpleExpression(simpleExpression));
+
+                if (expression.length() != 0) {
+                    matcher = pattern.matcher(expression);
+                }
+            }
+
+            if (expression.indexOf("(") != -1 && expression.indexOf(")") != -1) {
+                System.out.println("Bad format of the expression!");
+                System.exit(1);
+            }
+        }
+
         return expression;
     }
 
@@ -113,3 +136,4 @@ public class Calculator {
 }
 //2^5-4*-2/14-4.2*5-14.34/12.3^2 = 11.476643721141041
 //-5.002/-4^-1*18*-2+-3 = -723.288
+//2^(2(3/(2-5(4-5)))*2.3) = 3.921562439759093
