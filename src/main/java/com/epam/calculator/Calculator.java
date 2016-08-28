@@ -1,6 +1,7 @@
 package com.epam.calculator;
 
 import com.epam.calculator.mathematics.*;
+import com.epam.calculator.utils.Patterns;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.LinkedHashMap;
@@ -10,12 +11,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.epam.calculator.utils.Patterns.OPERATION_SIGNS;
+
 public class Calculator {
 
     private Map<Character, Mathematics> firstPriorityOperations;
     private Map<Character, Mathematics> secondPriorityOperations;
     private Map<Character, Mathematics> thirdPriorityOperations;
-    private final String OPERATION_SIGNS = "^*/+-";
 
     public Calculator() {
         firstPriorityOperations = new LinkedHashMap<>();
@@ -32,18 +34,18 @@ public class Calculator {
 
     public String calculate(String expression) {
         StringBuffer expressionCopy = new StringBuffer(expression);
-
         return calculateSimpleExpression(openBrackets(expressionCopy));
     }
 
     private StringBuffer openBrackets(StringBuffer expression) {
 
         if (expression.length() != 0) {
-            Pattern pattern = Pattern.compile("\\(([^\\(\\)])+\\)");
+            Pattern pattern = Pattern.compile(Patterns.EXPRESSION_IN_BRACKETS_PATTERN);
             Matcher matcher = pattern.matcher(expression);
 
             while (matcher.find()) {
-                StringBuffer simpleExpression = new StringBuffer(matcher.group().substring(1, matcher.group().length() - 1));
+                StringBuffer simpleExpression = new StringBuffer(matcher.group()
+                        .substring(1, matcher.group().length() - 1));
 
                 int startIndex = expression.indexOf(matcher.group());
                 int endIndex = startIndex + matcher.group().length();
@@ -80,7 +82,8 @@ public class Calculator {
                 + "|").collect(Collectors.toList());
 
         if (expression.length() != 0) {
-            Pattern pattern = Pattern.compile("(^(\\+|\\-))?[^" + OPERATION_SIGNS + "]+(" + opSigns + ")(\\+|\\-)?[^" + OPERATION_SIGNS + "]+");
+            Pattern pattern = Pattern.compile("(^(\\+|\\-))?[^" + OPERATION_SIGNS + "]+("
+                    + opSigns + ")(\\+|\\-)?[^" + OPERATION_SIGNS + "]+");
             Matcher matcher = pattern.matcher(expression);
 
             while (matcher.find()) {
@@ -90,7 +93,6 @@ public class Calculator {
                 Character opSign = null;
 
                 for (Character ch : operations.keySet()) {
-
                     if (matcher.group().contains(ch.toString())) {
                         opSign = ch;
                         break;
@@ -109,7 +111,8 @@ public class Calculator {
 
                 try {
                     a = Double.parseDouble(matcher.group().substring(0, signIndex));
-                    b = Double.parseDouble(matcher.group().substring(signIndex + 1, matcher.group().length()));
+                    b = Double.parseDouble(matcher.group().substring(signIndex + 1,
+                            matcher.group().length()));
                 } catch (NumberFormatException ex) {
                     ex.printStackTrace();
                 }

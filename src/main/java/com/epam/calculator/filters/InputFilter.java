@@ -1,5 +1,7 @@
 package com.epam.calculator.filters;
 
+import com.epam.calculator.utils.Patterns;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +20,7 @@ public class InputFilter implements Filter {
     }
 
     private StringBuffer putMultiplication(StringBuffer expression) {
-        Pattern pattern = Pattern.compile("(([\\d|\\w]|\\)){1}\\()|(\\)([\\d|\\w]|\\(){1})");
+        Pattern pattern = Pattern.compile(Patterns.INPUT_FILTER_PATTERN);
         Matcher matcher = pattern.matcher(expression);
 
         while (matcher.find()) {
