@@ -16,7 +16,6 @@ public class Reader {
                 System.out.println("You entered an empty string!\n______________");
             }
         } while (expression.isEmpty());
-        scanner.close();
 
         return expression;
     }
