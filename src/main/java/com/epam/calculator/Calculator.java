@@ -56,7 +56,6 @@ public class Calculator {
             }
 
             if (expression.indexOf("(") != -1 || expression.indexOf(")") != -1) {
-
                 throw new IllegalArgumentException("Invalid format of the expression! " +
                         "Brackets placed incorrectly.");
             }
@@ -70,7 +69,11 @@ public class Calculator {
         expression = calculateByPriority(expression, secondPriorityOperations);
         expression = calculateByPriority(expression, thirdPriorityOperations);
 
-        return expression.toString();
+        if (NumberUtils.isNumber(expression.toString())) {
+            return expression.toString();
+        } else {
+            throw new IllegalArgumentException("Invalid format of the expression!");
+        }
     }
 
     private StringBuffer calculateByPriority(StringBuffer expression,
@@ -89,7 +92,14 @@ public class Calculator {
             while (matcher.find()) {
 //                System.out.println(matcher.group()); // Each step
                 int signIndex = findOperationSignPosition(matcher.group());
-                char opSign = matcher.group().charAt(signIndex);
+                char opSign = OPERATION_SIGNS.charAt(0);
+
+                try {
+                    opSign = matcher.group().charAt(signIndex);
+                } catch (IllegalArgumentException ex) {
+                    System.err.println(ex.getMessage());
+                    System.exit(1);
+                }
 
                 Double a = 0.0;
                 Double b = 0.0;
@@ -140,13 +150,17 @@ public class Calculator {
     private int findOperationSignPosition(String expression) {
 
         for (int i = 1; i < expression.length() - 1; i++) {
-            if (NumberUtils.isNumber(expression.substring(i - 1, i))
-                    && !NumberUtils.isNumber(expression.substring(i, i + 1))
-                    && !expression.substring(i, i + 1).equals(".")) {
-                return i;
+
+            if (!(NumberUtils.isNumber(expression.substring(i, i + 1))
+                    || expression.substring(i, i + 1).equals("."))) {
+
+                if (NumberUtils.isNumber(expression.substring(0, i))
+                        && (NumberUtils.isNumber(expression.substring(i + 1, expression.length())))) {
+                    return i;
+                }
             }
         }
-        return -1;
+        throw new IllegalArgumentException("Invalid format of the expression!");
     }
 }
 //2^5-4*-2/14-4.2*5-14.34/12.3^2 = 11.476643721141041

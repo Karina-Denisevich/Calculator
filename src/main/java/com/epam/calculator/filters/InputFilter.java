@@ -9,13 +9,13 @@ public class InputFilter implements Filter {
 
     @Override
     public String doFilter(String expression) {
-        StringBuffer expressionCopy = new StringBuffer(deleteDelimiters(expression));
+        StringBuffer expressionCopy = new StringBuffer(deleteSpaces(expression));
         expressionCopy = putMultiplication(expressionCopy);
 
         return expressionCopy.toString();
     }
 
-    private String deleteDelimiters(String expression) {
+    private String deleteSpaces(String expression) {
         return expression.replaceAll(" ", "");
     }
 

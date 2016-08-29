@@ -3,7 +3,10 @@ package com.epam.calculator;
 import com.epam.calculator.console.Reader;
 import com.epam.calculator.console.Writer;
 import com.epam.calculator.filters.InputFilter;
+import com.epam.calculator.filters.OutputFilter;
 import com.epam.calculator.utils.Validation;
+import com.sun.corba.se.impl.naming.cosnaming.NamingUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 public class App {
 
@@ -28,6 +31,7 @@ public class App {
             System.out.println(exception.getMessage());
             System.exit(1);
         }
-        System.out.println("Answer = " + answer);
+
+        System.out.println("Answer = " + new OutputFilter().doFilter(answer));
     }
 }
