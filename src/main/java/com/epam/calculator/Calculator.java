@@ -32,12 +32,12 @@ public class Calculator {
         }
     }
 
-    public String calculate(String expression) {
-        StringBuffer expressionCopy = new StringBuffer(expression);
-        return calculateSimpleExpression(openBrackets(expressionCopy));
+    public String calculate(String expression) throws IllegalArgumentException {
+
+        return calculateSimpleExpression(openBrackets(new StringBuffer(expression)));
     }
 
-    private StringBuffer openBrackets(StringBuffer expression) {
+    private StringBuffer openBrackets(StringBuffer expression) throws IllegalArgumentException {
 
         if (expression.length() != 0) {
             Pattern pattern = Pattern.compile(Patterns.EXPRESSION_IN_BRACKETS_PATTERN);
@@ -47,80 +47,71 @@ public class Calculator {
                 StringBuffer simpleExpression = new StringBuffer(matcher.group()
                         .substring(1, matcher.group().length() - 1));
 
-                int startIndex = expression.indexOf(matcher.group());
-                int endIndex = startIndex + matcher.group().length();
-                expression.replace(startIndex, endIndex, calculateSimpleExpression(simpleExpression));
+                expression = replaceOnSimplifiedPart(expression, matcher.group(),
+                        calculateSimpleExpression(simpleExpression));
 
-                if (expression.length() != 0) {
+                if (expression.length() > 0) {
                     matcher = pattern.matcher(expression);
                 }
             }
 
-            if (expression.indexOf("(") != -1 && expression.indexOf(")") != -1) {
-                System.out.println("Bad format of the expression!");
-                System.exit(1);
+            if (expression.indexOf("(") != -1 || expression.indexOf(")") != -1) {
+
+                throw new IllegalArgumentException("Invalid format of the expression! " +
+                        "Brackets placed incorrectly.");
             }
         }
-
         return expression;
     }
 
-    private String calculateSimpleExpression(StringBuffer expression) {
+    private String calculateSimpleExpression(StringBuffer expression) throws IllegalArgumentException {
 
         expression = calculateByPriority(expression, firstPriorityOperations);
         expression = calculateByPriority(expression, secondPriorityOperations);
         expression = calculateByPriority(expression, thirdPriorityOperations);
 
-        System.out.println("answer = " + expression);
         return expression.toString();
     }
 
     private StringBuffer calculateByPriority(StringBuffer expression,
-                                             Map<Character, Mathematics> operations) {
+                                             Map<Character, Mathematics> operations)
+            throws IllegalArgumentException {
 
-        List<String> opSigns = operations.entrySet().stream().map(entry -> "\\" + entry.getKey()
+        List<String> opSignsPriority = operations.keySet().stream().map(key -> "\\" + key
                 + "|").collect(Collectors.toList());
 
         if (expression.length() != 0) {
+
             Pattern pattern = Pattern.compile("(^(\\+|\\-))?[^" + OPERATION_SIGNS + "]+("
-                    + opSigns + ")(\\+|\\-)?[^" + OPERATION_SIGNS + "]+");
+                    + opSignsPriority + ")(\\+|\\-)?[^" + OPERATION_SIGNS + "]+");
             Matcher matcher = pattern.matcher(expression);
 
             while (matcher.find()) {
 //                System.out.println(matcher.group()); // Each step
+                int signIndex = findOperationSignPosition(matcher.group());
+                char opSign = matcher.group().charAt(signIndex);
+
                 Double a = 0.0;
                 Double b = 0.0;
-                Character opSign = null;
-
-                for (Character ch : operations.keySet()) {
-                    if (matcher.group().contains(ch.toString())) {
-                        opSign = ch;
-                        break;
-                    }
-                }
-
-                int signIndex = 0;
-                for (int i = 1; i < matcher.group().length() - 1; i++) {
-                    if (NumberUtils.isNumber(matcher.group().substring(i - 1, i))
-                            && !NumberUtils.isNumber(matcher.group().substring(i, i + 1))
-                            && !matcher.group().substring(i, i + 1).equals(".")) {
-                        signIndex = i;
-                        break;
-                    }
-                }
-
                 try {
                     a = Double.parseDouble(matcher.group().substring(0, signIndex));
                     b = Double.parseDouble(matcher.group().substring(signIndex + 1,
                             matcher.group().length()));
                 } catch (NumberFormatException ex) {
-                    ex.printStackTrace();
+                    System.err.println("Parse exception: " + ex.getMessage());
+                    System.exit(1);
                 }
-                Mathematics maths = operations.get(opSign);
 
-                int startIndex = expression.indexOf(matcher.group());
-                int endIndex = startIndex + matcher.group().length();
-                expression.replace(startIndex, endIndex, (maths.compute(a, b)).toString());
+                Mathematics maths = operations.get(opSign);
+                String result = "";
+
+                try {
+                    result = maths.compute(a, b).toString();
+                } catch (ArithmeticException ex) {
+                    System.err.println(ex.getMessage());
+                    System.exit(1);
+                }
+                replaceOnSimplifiedPart(expression, matcher.group(), result);
 
                 if (expression.length() != 0) {
                     matcher = pattern.matcher(expression);
@@ -129,12 +120,33 @@ public class Calculator {
 
             operations.keySet().stream().filter(ch -> expression.indexOf(ch.toString()) != -1
                     && !NumberUtils.isNumber(expression.toString())).forEach(ch -> {
-                System.out.println("Bad format of the expression!");
-                System.exit(1);
+                throw new IllegalArgumentException("Invalid format of the expression!");
             });
         }
 
         return expression;
+    }
+
+    private StringBuffer replaceOnSimplifiedPart(StringBuffer expression,
+                                                 String target, String replacement) {
+
+        int startIndex = expression.indexOf(target);
+        int endIndex = startIndex + target.length();
+        expression.replace(startIndex, endIndex, replacement);
+
+        return expression;
+    }
+
+    private int findOperationSignPosition(String expression) {
+
+        for (int i = 1; i < expression.length() - 1; i++) {
+            if (NumberUtils.isNumber(expression.substring(i - 1, i))
+                    && !NumberUtils.isNumber(expression.substring(i, i + 1))
+                    && !expression.substring(i, i + 1).equals(".")) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
 //2^5-4*-2/14-4.2*5-14.34/12.3^2 = 11.476643721141041
