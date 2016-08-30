@@ -11,7 +11,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.epam.calculator.utils.Patterns.FIRST_NUMBER_PATTERN;
 import static com.epam.calculator.utils.Patterns.OPERATION_SIGNS;
+import static com.epam.calculator.utils.Patterns.SECOND_NUMBER_PATTERN;
 
 public class Calculator {
 
@@ -85,19 +87,25 @@ public class Calculator {
 
         if (expression.length() != 0) {
 
-            Pattern pattern = Pattern.compile("(^(\\+|\\-))?(\\d|\\.)+" +
-                    "(E(\\+|\\-)?(\\d)+)?("
-                    + opSignsPriority +
-                    ")(\\+|\\-)?(\\d|\\.)+(E(\\+|\\-)?(\\d)+)?");
+            Pattern pattern = Pattern.compile(FIRST_NUMBER_PATTERN + '(' + opSignsPriority + ')'
+                    + SECOND_NUMBER_PATTERN);
             Matcher matcher = pattern.matcher(expression);
 
             while (matcher.find()) {
-//                System.out.println(matcher.group()); // Each step
-                int signIndex = findOperationSignPosition(matcher.group());
+                String matcherGroup;
+                // 4*-2^1 - expression is -2^1, but 4-2^1 - expression is 2^1
+                if (matcher.group().startsWith("/") || matcher.group().startsWith("*")) {
+                    matcherGroup = matcher.group().substring(1, matcher.group().length());
+                } else {
+                    matcherGroup = matcher.group();
+                }
+//                System.out.println("step = " + matcherGroup); // Each step
+
+                int signIndex = findOperationSignPosition(matcherGroup);
                 char opSign = OPERATION_SIGNS.charAt(0);
 
                 try {
-                    opSign = matcher.group().charAt(signIndex);
+                    opSign = matcherGroup.charAt(signIndex);
                 } catch (IllegalArgumentException ex) {
                     System.err.println(ex.getMessage());
                     System.exit(1);
@@ -106,9 +114,9 @@ public class Calculator {
                 Double a = 0.0;
                 Double b = 0.0;
                 try {
-                    a = Double.parseDouble(matcher.group().substring(0, signIndex));
-                    b = Double.parseDouble(matcher.group().substring(signIndex + 1,
-                            matcher.group().length()));
+                    a = Double.parseDouble(matcherGroup.substring(0, signIndex));
+                    b = Double.parseDouble(matcherGroup.substring(signIndex + 1,
+                            matcherGroup.length()));
                 } catch (NumberFormatException ex) {
                     System.err.println("Parse exception: " + ex.getMessage());
                     System.exit(1);
@@ -123,7 +131,7 @@ public class Calculator {
                     System.err.println(ex.getMessage());
                     System.exit(1);
                 }
-                replaceOnSimplifiedPart(expression, matcher.group(), result);
+                replaceOnSimplifiedPart(expression, matcherGroup, result);
 
                 if (expression.length() != 0) {
                     matcher = pattern.matcher(expression);
@@ -155,14 +163,20 @@ public class Calculator {
 
             if (!(NumberUtils.isNumber(expression.substring(i, i + 1))
                     || expression.substring(i, i + 1).equals("."))) {
-
-                if (NumberUtils.isNumber(expression.substring(0, i))
-                        && NumberUtils.isNumber(expression.substring(i + 1, expression.length()))) {
+                if (isNumber(expression.substring(0, i))
+                        && isNumber(expression.substring(i + 1, expression.length()))) {
                     return i;
                 }
             }
         }
         throw new IllegalArgumentException("Invalid format of the expression!");
+    }
+
+    private boolean isNumber(String number) {
+
+        return (NumberUtils.isNumber(number) || (number.startsWith("+")
+                && NumberUtils.isNumber(number.substring(1, number.length()))));
+
     }
 }
 //2^5-4*-2/14-4.2*5-14.34/12.3^2 = 11.476643721141041
