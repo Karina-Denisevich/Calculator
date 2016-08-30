@@ -85,8 +85,10 @@ public class Calculator {
 
         if (expression.length() != 0) {
 
-            Pattern pattern = Pattern.compile("(^(\\+|\\-))?[^" + OPERATION_SIGNS + "]+("
-                    + opSignsPriority + ")(\\+|\\-)?[^" + OPERATION_SIGNS + "]+");
+            Pattern pattern = Pattern.compile("(^(\\+|\\-))?(\\d|\\.)+" +
+                    "(E(\\+|\\-)?(\\d)+)?("
+                    + opSignsPriority +
+                    ")(\\+|\\-)?(\\d|\\.)+(E(\\+|\\-)?(\\d)+)?");
             Matcher matcher = pattern.matcher(expression);
 
             while (matcher.find()) {
@@ -155,7 +157,7 @@ public class Calculator {
                     || expression.substring(i, i + 1).equals("."))) {
 
                 if (NumberUtils.isNumber(expression.substring(0, i))
-                        && (NumberUtils.isNumber(expression.substring(i + 1, expression.length())))) {
+                        && NumberUtils.isNumber(expression.substring(i + 1, expression.length()))) {
                     return i;
                 }
             }
