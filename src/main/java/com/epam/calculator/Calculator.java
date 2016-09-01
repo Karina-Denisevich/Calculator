@@ -71,7 +71,7 @@ public class Calculator {
         expression = calculateByPriority(expression, secondPriorityOperations);
         expression = calculateByPriority(expression, thirdPriorityOperations);
 
-        if (NumberUtils.isNumber(expression.toString())) {
+        if (isNumber(expression.toString())) {
             return expression.toString();
         } else {
             throw new IllegalArgumentException("Invalid format of the expression!");
@@ -107,8 +107,7 @@ public class Calculator {
                 try {
                     opSign = matcherGroup.charAt(signIndex);
                 } catch (IllegalArgumentException ex) {
-                    System.err.println(ex.getMessage());
-                    System.exit(1);
+                    throw new IllegalArgumentException(ex.getMessage());
                 }
 
                 Double a = 0.0;
@@ -118,8 +117,7 @@ public class Calculator {
                     b = Double.parseDouble(matcherGroup.substring(signIndex + 1,
                             matcherGroup.length()));
                 } catch (NumberFormatException ex) {
-                    System.err.println("Parse exception: " + ex.getMessage());
-                    System.exit(1);
+                    throw new IllegalArgumentException("Parse exception: " + ex);
                 }
 
                 Mathematics maths = operations.get(opSign);
@@ -128,8 +126,7 @@ public class Calculator {
                 try {
                     result = maths.compute(a, b).toString();
                 } catch (ArithmeticException ex) {
-                    System.err.println(ex.getMessage());
-                    System.exit(1);
+                    throw new IllegalArgumentException(ex);
                 }
                 replaceOnSimplifiedPart(expression, matcherGroup, result);
 
@@ -139,7 +136,7 @@ public class Calculator {
             }
 
             operations.keySet().stream().filter(ch -> expression.indexOf(ch.toString()) != -1
-                    && !NumberUtils.isNumber(expression.toString())).forEach(ch -> {
+                    && !isNumber(expression.toString())).forEach(ch -> {
                 throw new IllegalArgumentException("Invalid format of the expression!");
             });
         }

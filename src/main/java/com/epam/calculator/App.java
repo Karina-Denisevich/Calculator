@@ -27,11 +27,9 @@ public class App {
 
         try {
             answer = new Calculator().calculate(expression);
+            System.out.println("Answer = " + new OutputFilter().doFilter(answer));
         } catch (IllegalArgumentException exception) {
             System.out.println(exception.getMessage());
-            System.exit(1);
         }
-
-        System.out.println("Answer = " + new OutputFilter().doFilter(answer));
     }
 }
