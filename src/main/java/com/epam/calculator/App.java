@@ -23,7 +23,7 @@ public class App {
         } while (!validation.isExpressionValid(expression));
 
         expression = new InputFilter().doFilter(expression);
-        String answer = "";
+        String answer;
 
         try {
             answer = new Calculator().calculate(expression);

@@ -19,7 +19,7 @@ public final class MathExpressionsUtils {
                 }
             }
         }
-        throw new IllegalArgumentException("Invalid format of the expression!");
+        return -1;
     }
 
     public static boolean isNumber(String number) {

@@ -25,13 +25,16 @@ public class Calculator {
         firstPriorityOperations = new LinkedHashMap<>();
         secondPriorityOperations = new LinkedHashMap<>();
         thirdPriorityOperations = new LinkedHashMap<>();
-        {
-            firstPriorityOperations.put('^', new Exponentiation());
-            secondPriorityOperations.put('/', new Division());
-            secondPriorityOperations.put('*', new Multiplication());
-            thirdPriorityOperations.put('+', new Addition());
-            thirdPriorityOperations.put('-', new Subtraction());
-        }
+
+        setPriorities();
+    }
+
+    private void setPriorities() {
+        firstPriorityOperations.put('^', new Exponentiation());
+        secondPriorityOperations.put('/', new Division());
+        secondPriorityOperations.put('*', new Multiplication());
+        thirdPriorityOperations.put('+', new Addition());
+        thirdPriorityOperations.put('-', new Subtraction());
     }
 
     public String calculate(String expression) throws IllegalArgumentException {
@@ -82,49 +85,26 @@ public class Calculator {
                                               Map<Character, Mathematics> operations)
             throws IllegalArgumentException {
 
-        List<String> opSignsPriority = operations.keySet().stream().map(key -> "\\" + key
+        List<String> operationSignsPattern = operations.keySet().stream().map(key -> "\\" + key
                 + "|").collect(Collectors.toList());
 
         if (expression.length() != 0) {
 
-            Pattern pattern = Pattern.compile(FIRST_NUMBER_PATTERN + '(' + opSignsPriority + ')'
+            Pattern pattern = Pattern.compile(FIRST_NUMBER_PATTERN + '(' + operationSignsPattern + ')'
                     + SECOND_NUMBER_PATTERN);
             Matcher matcher = pattern.matcher(expression);
 
             while (matcher.find()) {
-                String matcherGroup;
-                // 4*-2^1 - expression is -2^1, but 4-2^1 - expression is 2^1
-                if (matcher.group().startsWith("/") || matcher.group().startsWith("*")) {
-                    matcherGroup = matcher.group().substring(1, matcher.group().length());
-                } else {
-                    matcherGroup = matcher.group();
-                }
+                String matcherGroup = getMatcherGroup(matcher.group());
 //                System.out.println("step = " + matcherGroup); // Each step
 
-                int signIndex = MathExpressionsUtils.findOperationSignPosition(matcherGroup);
-                char opSign = OPERATION_SIGNS.charAt(0);
+                Expression singleExpression = getExpression(matcherGroup);
+                Mathematics maths = operations.get(singleExpression.getOperationSign());
+                String result;
 
                 try {
-                    opSign = matcherGroup.charAt(signIndex);
-                } catch (IllegalArgumentException ex) {
-                    throw new IllegalArgumentException(ex.getMessage());
-                }
-
-                Double a = 0.0;
-                Double b = 0.0;
-                try {
-                    a = Double.parseDouble(matcherGroup.substring(0, signIndex));
-                    b = Double.parseDouble(matcherGroup.substring(signIndex + 1,
-                            matcherGroup.length()));
-                } catch (NumberFormatException ex) {
-                    throw new IllegalArgumentException("Parse exception: " + ex);
-                }
-
-                Mathematics maths = operations.get(opSign);
-                String result = "";
-
-                try {
-                    result = maths.compute(a, b).toString();
+                    result = maths.compute(singleExpression.getFirstOperand(),
+                            singleExpression.getSecondOperand()).toString();
                 } catch (ArithmeticException ex) {
                     throw new IllegalArgumentException(ex);
                 }
@@ -144,9 +124,32 @@ public class Calculator {
         return expression;
     }
 
+    private String getMatcherGroup(String matcherGroup) {
+        // 4*-2^1 - expression is -2^1, but 4-2^1 - expression is 2^1
+        return matcherGroup.startsWith("/") || matcherGroup.startsWith("*") ?
+                matcherGroup.substring(1, matcherGroup.length()) : matcherGroup;
+    }
+
+    private Expression getExpression(String expressionString) throws IllegalArgumentException {
+
+        int operationSignPosition = MathExpressionsUtils.
+                findOperationSignPosition(expressionString);
+        Expression expression = new Expression();
+        expression.setOperationSign(expressionString.charAt(operationSignPosition));
+
+        try {
+            expression.setFirstOperand(Double.parseDouble(expressionString.substring(0,
+                    operationSignPosition)));
+            expression.setSecondOperand(Double.parseDouble(expressionString.substring(operationSignPosition
+                    + 1, expressionString.length())));
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Parse exception: " + ex);
+        }
+        return expression;
+    }
+
     private StringBuilder replaceOnSimplifiedPart(StringBuilder expression,
                                                   String target, String replacement) {
-
         int startIndex = expression.indexOf(target);
         int endIndex = startIndex + target.length();
         expression.replace(startIndex, endIndex, replacement);
