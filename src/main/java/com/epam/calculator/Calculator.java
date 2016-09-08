@@ -36,17 +36,17 @@ public class Calculator {
 
     public String calculate(String expression) throws IllegalArgumentException {
 
-        return calculateSimpleExpression(openBrackets(new StringBuffer(expression)));
+        return calculateSimpleExpression(openBrackets(new StringBuilder(expression)));
     }
 
-    private StringBuffer openBrackets(StringBuffer expression) throws IllegalArgumentException {
+    private StringBuilder openBrackets(StringBuilder expression) throws IllegalArgumentException {
 
         if (expression.length() != 0) {
             Pattern pattern = Pattern.compile(Patterns.EXPRESSION_IN_BRACKETS_PATTERN);
             Matcher matcher = pattern.matcher(expression);
 
             while (matcher.find()) {
-                StringBuffer simpleExpression = new StringBuffer(matcher.group()
+                StringBuilder simpleExpression = new StringBuilder(matcher.group()
                         .substring(1, matcher.group().length() - 1));
 
                 expression = replaceOnSimplifiedPart(expression, matcher.group(),
@@ -65,21 +65,21 @@ public class Calculator {
         return expression;
     }
 
-    private String calculateSimpleExpression(StringBuffer expression) throws IllegalArgumentException {
+    private String calculateSimpleExpression(StringBuilder expression) throws IllegalArgumentException {
 
         expression = calculateByPriority(expression, firstPriorityOperations);
         expression = calculateByPriority(expression, secondPriorityOperations);
         expression = calculateByPriority(expression, thirdPriorityOperations);
 
-        if (isNumber(expression.toString())) {
+        if (MathExpressionsUtils.isNumber(expression.toString())) {
             return expression.toString();
         } else {
             throw new IllegalArgumentException("Invalid format of the expression!");
         }
     }
 
-    private StringBuffer calculateByPriority(StringBuffer expression,
-                                             Map<Character, Mathematics> operations)
+    private StringBuilder calculateByPriority(StringBuilder expression,
+                                              Map<Character, Mathematics> operations)
             throws IllegalArgumentException {
 
         List<String> opSignsPriority = operations.keySet().stream().map(key -> "\\" + key
@@ -101,7 +101,7 @@ public class Calculator {
                 }
 //                System.out.println("step = " + matcherGroup); // Each step
 
-                int signIndex = findOperationSignPosition(matcherGroup);
+                int signIndex = MathExpressionsUtils.findOperationSignPosition(matcherGroup);
                 char opSign = OPERATION_SIGNS.charAt(0);
 
                 try {
@@ -136,7 +136,7 @@ public class Calculator {
             }
 
             operations.keySet().stream().filter(ch -> expression.indexOf(ch.toString()) != -1
-                    && !isNumber(expression.toString())).forEach(ch -> {
+                    && !MathExpressionsUtils.isNumber(expression.toString())).forEach(ch -> {
                 throw new IllegalArgumentException("Invalid format of the expression!");
             });
         }
@@ -144,36 +144,14 @@ public class Calculator {
         return expression;
     }
 
-    private StringBuffer replaceOnSimplifiedPart(StringBuffer expression,
-                                                 String target, String replacement) {
+    private StringBuilder replaceOnSimplifiedPart(StringBuilder expression,
+                                                  String target, String replacement) {
 
         int startIndex = expression.indexOf(target);
         int endIndex = startIndex + target.length();
         expression.replace(startIndex, endIndex, replacement);
 
         return expression;
-    }
-
-    private int findOperationSignPosition(String expression) {
-
-        for (int i = 1; i < expression.length() - 1; i++) {
-
-            if (!(NumberUtils.isNumber(expression.substring(i, i + 1))
-                    || expression.substring(i, i + 1).equals("."))) {
-                if (isNumber(expression.substring(0, i))
-                        && isNumber(expression.substring(i + 1, expression.length()))) {
-                    return i;
-                }
-            }
-        }
-        throw new IllegalArgumentException("Invalid format of the expression!");
-    }
-
-    private boolean isNumber(String number) {
-
-        return (NumberUtils.isNumber(number) || (number.startsWith("+")
-                && NumberUtils.isNumber(number.substring(1, number.length()))));
-
     }
 }
 //2^5-4*-2/14-4.2*5-14.34/12.3^2 = 11.476643721141041

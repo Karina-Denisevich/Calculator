@@ -1,6 +1,6 @@
 package com.epam.calculator.filters;
 
-interface Filter {
+public interface Filter {
 
     String doFilter(String expression);
 }
